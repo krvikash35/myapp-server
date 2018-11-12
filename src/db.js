@@ -60,12 +60,13 @@ async function createPost(post) {
 }
 
 async function getDB() {
-  // if (db) return db;
+  if (db) return db;
   const client = await MongoClient.connect(
-    constants.MONGO_DB_URL,
+    constants.DB_URL,
     { useNewUrlParser: true }
   );
-  db = client.db(constants.MONGO_DB_NAME);
+  db = client.db(constants.DB_NAME);
+  console.log("connected to DB_URL:", constants.DB_URL); // eslint-disable-line
   return db;
 }
 

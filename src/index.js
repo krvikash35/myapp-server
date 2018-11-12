@@ -7,17 +7,19 @@ const path = require("path");
 const connectDB = require("./db").getDB;
 const apiRouter = require("./routerAPI");
 
-const port = process.argv[2] || 3000;
+const APP_PORT = process.env.PORT || 3000;
+const APP_HOST = process.env.HOST || "0.0.0.0";
 
 app.use(express.urlencoded({ extended: true }));
-
 app.use(express.json());
-
-app.use(express.static(path.join(__dirname, "../build")));
 app.use("/api", apiRouter);
+
+const publicDir = path.join(__dirname, "../../myapp-client/build/");
+const publicIndexFile = path.join(publicDir, "index.html");
+app.use(express.static(publicDir));
 app.get("*", (req, res) => {
   // res.redirect("/"); //dont redirect to homepage, instead send the homepage
-  res.sendFile(path.join(__dirname, "../build/index.html"));
+  res.sendFile(publicIndexFile);
 });
 
 (async () => {
@@ -27,10 +29,15 @@ app.get("*", (req, res) => {
   } catch (error) {
     return console.log("could not connect to database:", error.message);
   }
-  const server = app.listen(port, () => {
-    console.log("HTTP server listening on port", port);
+  const server = app.listen(APP_PORT, APP_HOST, () => {
+    console.log("HTTPserver listening on: " + APP_HOST + ":" + APP_PORT);
   });
   server.on("error", err => {
-    console.log("could not bind the server on port ", port, ":", err.message);
+    console.log(
+      "HTTPServer Failed to bind on ",
+      APP_HOST + ":" + APP_PORT,
+      "\nReason: " + err.message
+    );
+    process.exit();
   });
 })();

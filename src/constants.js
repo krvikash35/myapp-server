@@ -1,6 +1,5 @@
-exports.MONGO_DB_URL =
-  "mongodb+srv://krvikash35:mindtree123@cluster0-qiuaj.mongodb.net/test?retryWrites=true";
-exports.MONGO_DB_NAME = "myapp";
+exports.DB_URL = process.env.MYAPP_DB_URL || "mongodb://localhost:27017/test";
+exports.DB_NAME = "myapp";
 exports.COLL_USERS_NAME = "users";
 exports.COLL_POLLS_NAME = "polls";
 exports.COLL_TODOS_NAME = "todos";
