@@ -43,12 +43,59 @@ async function getPostsByPageAndSize(page, size) {
   const skip = size * (page - 1);
   const db = await getDB();
   const collection = db.collection(constants.COLL_POSTS_NAME);
+  // const posts = collection
+  //   .find()
+  //   .sort({ $natural: -1 })
+  //   .skip(skip)
+  //   .limit(size)
+  //   .toArray();
+
+  // const posts = collection
+  //   .aggregate()
+  //   .sort({ createdAt: -1 })
+  //   .skip(skip)
+  //   .limit(size)
+  //   .unwind({ path: "$likedBy", preserveNullAndEmptyArrays: true })
+  //   .lookup({
+  //     from: constants.COLL_USERS_NAME,
+  //     foreignField: "_id",
+  //     localField: "likedBy",
+  //     as: "likedByUsers"
+  //   })
+  //   .unwind({ path: "$likedByUsers", preserveNullAndEmptyArrays: true })
+  //   .project({ "likedByUsers.password": 0 })
+  //   .group({
+  //     _id: "$_id",
+  //     likedBy: { $push: "$likedBy" },
+  //     likedByUsers: { $push: "$likedByUsers" },
+  //     title: { $first: "$title" },
+  //     content: { $first: "$content" },
+  //     createdAt: { $first: "$createdAt" },
+  //     createdBy: { $first: "$createdBy" }
+  //   })
+  //   .project({
+  //     likedBy: 0
+  //   })
+  //   .toArray();
+
   const posts = collection
-    .find()
-    .sort({ $natural: -1 })
+    .aggregate()
+    .sort({ createdAt: -1 })
     .skip(skip)
     .limit(size)
+    .lookup({
+      from: constants.COLL_USERS_NAME,
+      foreignField: "_id",
+      localField: "createdBy",
+      as: "createdByUser"
+    })
+    .unwind({ path: "$createdByUser", preserveNullAndEmptyArrays: true })
+    .project({
+      createdBy: 0,
+      "createdByUser.password": 0
+    })
     .toArray();
+
   return posts;
 }
 
