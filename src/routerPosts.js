@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("./db");
 const handlerPrivateRoute = require("./handlerPrivateRoute");
+// const util = require("./util");
 
 router.get("/", async (req, res) => {
   let { page = 1, size = 2 } = req.query;
@@ -15,6 +16,7 @@ router.get("/", async (req, res) => {
     size = parseInt(size);
   }
   const posts = await db.getPostsByPageAndSize(page, size);
+  // await util.wait(1);
   return res.status(200).json(posts);
 });
 
