@@ -14,6 +14,7 @@ module.exports = {
   getUserByID,
   getUserByUsername,
   getPostsByPageAndSize,
+  getPostsByPageAndSizeAndPostID,
   createPost,
   likePost,
   unlikePost
@@ -24,9 +25,9 @@ async function likePost(postid, likedBy) {
   const collection = db.collection(constants.COLL_POSTS_NAME);
   const response = await collection.updateOne(
     { _id: postid },
-    { $push: { likedBy } }
+    { $addToSet: { likedBy } }
   );
-  return response.result.ok === 1;
+  return response.result;
 }
 
 async function unlikePost(postid, likedBy) {
@@ -36,7 +37,7 @@ async function unlikePost(postid, likedBy) {
     { _id: postid },
     { $pull: { likedBy } }
   );
-  return response.result.ok === 1;
+  return response.result;
 }
 
 async function getPostsByPageAndSize(page, size) {
@@ -99,11 +100,40 @@ async function getPostsByPageAndSize(page, size) {
   return posts;
 }
 
+async function getPostsByPageAndSizeAndPostID(page, size, postid) {
+  const skip = size * (page - 1);
+  const db = await getDB();
+  const collection = db.collection(constants.COLL_POSTS_NAME);
+  const posts = collection
+    .aggregate()
+    // .sort({ _id: -1 })
+    .match({ _id: { $gte: postid } })
+    .skip(skip)
+    .limit(size)
+    .lookup({
+      from: constants.COLL_USERS_NAME,
+      foreignField: "_id",
+      localField: "createdBy",
+      as: "createdByUser"
+    })
+    .unwind({ path: "$createdByUser", preserveNullAndEmptyArrays: true })
+    .project({
+      createdBy: 0,
+      "createdByUser.password": 0
+    })
+    .sort({ _id: -1 })
+    .toArray();
+  return posts;
+}
 async function createPost(post) {
   const db = await getDB();
   const collection = db.collection(constants.COLL_POSTS_NAME);
   const response = await collection.insertOne(post);
-  return response.result.ok === 1;
+  return {
+    n: response.result.n,
+    ok: response.result.ok,
+    data: response.ops[0]
+  };
 }
 
 async function getDB() {
